@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz SAP - BDC & Commandes</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f7fb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .quiz-container {
+      background: #ffffff;
+      max-width: 900px;
+      width: 100%;
+      margin: 24px;
+      padding: 24px 28px 32px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.7rem;
+      text-align: center;
+      color: #1f2933;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin-bottom: 16px;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    /* --- Progression --- */
+    .progress-wrapper {
+      margin-bottom: 18px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+
+    .live-score {
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #4f46e5;
+      border-radius: 999px;
+      transition: width 0.25s ease-out;
+    }
+
+    .question {
+      margin-bottom: 20px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      display: none; /* une question à la fois */
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .question-title {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .question-type {
+      font-size: 0.75rem;
+      color: #4b5563;
+      background: #e5e7eb;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .question-text {
+      margin-bottom: 10px;
+      color: #111827;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label.option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.95rem;
+      color: #111827;
+    }
+
+    label.option:hover {
+      background: #eef2ff;
+    }
+
+    .option input {
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+
+    .feedback {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-height: 1.1em;
+    }
+
+    .feedback.correct {
+      color: #166534;
+    }
+
+    .feedback.incorrect {
+      color: #b91c1c;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #validate-btn {
+      background: #4f46e5;
+      color: white;
+    }
+
+    #validate-btn:hover:not(:disabled) {
+      background: #4338ca;
+    }
+
+    #validate-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    #reset-btn {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    #reset-btn:hover {
+      background: #d1d5db;
+    }
+
+    #result {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin-top: 8px;
+    }
+
+    #result span {
+      font-weight: 700;
+    }
+
+    .score-good {
+      color: #15803d;
+    }
+
+    .score-medium {
+      color: #a16207;
+    }
+
+    .score-bad {
+      color: #b91c1c;
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .quiz-container {
+        margin: 12px;
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      .progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <h1>Quiz SAP – BDC & Commandes</h1>
+  <p class="subtitle">
+    Réponds à chaque question, clique sur <strong>Valider cette question</strong> pour voir le feedback, puis la suivante s’affiche automatiquement.
+  </p>
+
+  <!-- Progression texte + barre + score live -->
+  <div class="progress-wrapper">
+    <div class="progress-header">
+      <div class="progress-text" id="progress-text">Question 1 / 8 · 12%</div>
+      <div class="live-score" id="live-score">Score : 0 / 8</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <form id="quiz-form">
+
+    <!-- Q1 -->
+    <div class="question" data-question="1">
+      <div class="question-header">
+        <div class="question-title">Question 1</div>
+        <div class="question-type">QCM (plusieurs réponses possibles)</div>
+      </div>
+      <div class="question-text">
+        1. Quelles vérifications doivent être effectuées avant la saisie d’un BDC dans SAP ?
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="checkbox" name="q1" value="a">
+          a) Présence de la signature et date de souscription
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q1" value="b">
+          b) Dates de la campagne
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q1" value="c">
+          c) Existence d’une fiche BP pour l’EPJ
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q1" value="d">
+          d) Vérifier le matricule vendeur dans SAP
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question" data-question="2">
+      <div class="question-header">
+        <div class="question-title">Question 2</div>
+        <div class="question-type">QCM (plusieurs réponses possibles)</div>
+      </div>
+      <div class="question-text">
+        2. Lors de la création de la commande dans SAP (VA01), quelles informations doivent être saisies ?
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="checkbox" name="q2" value="a">
+          a) Type de commande
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q2" value="b">
+          b) Origine de la commande : SOLOCAL SA
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q2" value="c">
+          c) IBAN du client
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q2" value="d">
+          d) Dates de début et fin des PB
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question" data-question="3">
+      <div class="question-header">
+        <div class="question-title">Question 3</div>
+        <div class="question-type">Vrai / Faux</div>
+      </div>
+      <div class="question-text">
+        3. Avant toute saisie dans SAP, il faut vérifier si la commande est déjà présente dans SAP.
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="q3" value="Vrai">
+          Vrai
+        </label>
+        <label class="option">
+          <input type="radio" name="q3" value="Faux">
+          Faux
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question" data-question="4">
+      <div class="question-header">
+        <div class="question-title">Question 4</div>
+        <div class="question-type">Vrai / Faux</div>
+      </div>
+      <div class="question-text">
+        4. Le contrôle des données de facturation inclut la vérification de la conformité entre l’adresse et la raison sociale présentes sur le BDC.
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="q4" value="Vrai">
+          Vrai
+        </label>
+        <label class="option">
+          <input type="radio" name="q4" value="Faux">
+          Faux
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question" data-question="5">
+      <div class="question-header">
+        <div class="question-title">Question 5</div>
+        <div class="question-type">Vrai / Faux</div>
+      </div>
+      <div class="question-text">
+        5. Après la saisie dans SAP, il n’est pas nécessaire de contrôler l’intégration de la commande.
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="q5" value="Vrai">
+          Vrai
+        </label>
+        <label class="option">
+          <input type="radio" name="q5" value="Faux">
+          Faux
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question" data-question="6">
+      <div class="question-header">
+        <div class="question-title">Question 6</div>
+        <div class="question-type">QCM (plusieurs réponses possibles)</div>
+      </div>
+      <div class="question-text">
+        6. Quels sont les trois temps forts des actions dans SAP ?
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="checkbox" name="q6" value="a">
+          a) Contrôler les données de facturation et de paiement
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q6" value="b">
+          b) Créer la commande dans SAP
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q6" value="c">
+          c) Vérifier la présence de l’IBAN dans le BDC
+        </label>
+        <label class="option">
+          <input type="checkbox" name="q6" value="d">
+          d) Contrôler l’intégration de la commande dans SAP
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="question" data-question="7">
+      <div class="question-header">
+        <div class="question-title">Question 7</div>
+        <div class="question-type">Vrai / Faux</div>
+      </div>
+      <div class="question-text">
+        7. Lors de la création de la commande dans SAP, il faut indiquer l’origine de la commande : SOLOCAL SA.
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="q7" value="Vrai">
+          Vrai
+        </label>
+        <label class="option">
+          <input type="radio" name="q7" value="Faux">
+          Faux
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="question" data-question="8">
+      <div class="question-header">
+        <div class="question-title">Question 8</div>
+        <div class="question-type">Vrai / Faux</div>
+      </div>
+      <div class="question-text">
+        8. Si l’IBAN est absent sur le BDC, il n’est pas nécessaire de le créer dans SAP.
+      </div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="q8" value="Vrai">
+          Vrai
+        </label>
+        <label class="option">
+          <input type="radio" name="q8" value="Faux">
+          Faux
+        </label>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+  </form>
+
+  <div class="buttons">
+    <button type="button" id="validate-btn">✅ Valider cette question</button>
+    <button type="button" id="reset-btn">🔄 Recommencer</button>
+  </div>
+
+  <div id="result"></div>
+  <div class="hint">Les QCM peuvent avoir plusieurs bonnes réponses. Le score final s’affiche après la dernière question.</div>
+</div>
+
+<script>
+  // Réponses correctes
+  const answers = {
+    q1: ["a", "b", "c"],
+    q2: ["a", "b", "d"],
+    q3: "Vrai",
+    q4: "Vrai",
+    q5: "Faux",
+    q6: ["a", "b", "d"],
+    q7: "Vrai",
+    q8: "Faux"
+  };
+
+  function arraysEqual(a1, a2) {
+    if (a1.length !== a2.length) return false;
+    const s1 = [...a1].sort();
+    const s2 = [...a2].sort();
+    return s1.every((val, index) => val === s2[index]);
+  }
+
+  const questions = document.querySelectorAll(".question");
+  const totalQuestions = questions.length;
+  const progressText = document.getElementById("progress-text");
+  const progressFill = document.getElementById("progress-fill");
+  const liveScore = document.getElementById("live-score");
+  const validateBtn = document.getElementById("validate-btn");
+  const resetBtn = document.getElementById("reset-btn");
+  const resultDiv = document.getElementById("result");
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let finished = false;
+
+  function updateProgress(index) {
+    const percent = Math.round(((index + 1) / totalQuestions) * 100);
+    progressText.textContent = `Question ${index + 1} / ${totalQuestions} · ${percent}%`;
+    progressFill.style.width = percent + "%";
+  }
+
+  function updateLiveScore() {
+    liveScore.textContent = `Score : ${score} / ${totalQuestions}`;
+  }
+
+  function showQuestion(index) {
+    questions.forEach((q, i) => {
+      q.style.display = i === index ? "block" : "none";
+    });
+    updateProgress(index);
+    updateLiveScore();
+    validateBtn.disabled = false;
+  }
+
+  function showAllQuestions() {
+    questions.forEach(q => q.style.display = "block");
+    progressText.textContent = "Résultats du quiz · 100%";
+    progressFill.style.width = "100%";
+  }
+
+  function validateCurrentQuestion() {
+    if (finished) return;
+
+    validateBtn.disabled = true; // éviter double clics
+
+    const currentQuestion = questions[currentQuestionIndex];
+    const qNum = currentQuestion.getAttribute("data-question");
+    const fb = currentQuestion.querySelector(".feedback");
+    fb.textContent = "";
+    fb.classList.remove("correct", "incorrect");
+
+    const correctAnswer = answers["q" + qNum];
+    let isCorrect = false;
+
+    if (Array.isArray(correctAnswer)) {
+      // QCM
+      const checked = Array.from(document.querySelectorAll(`input[name="q${qNum}"]:checked`))
+        .map(el => el.value);
+
+      if (checked.length === 0) {
+        fb.textContent = "⚠️ Sélectionne au moins une réponse.";
+        validateBtn.disabled = false;
+        return;
+      }
+
+      isCorrect = arraysEqual(checked, correctAnswer);
+
+      if (isCorrect) {
+        score++;
+        fb.textContent = "✅ Bonne réponse. Solutions : " + correctAnswer.join(", ") + ".";
+        fb.classList.add("correct");
+      } else {
+        fb.textContent = "❌ Incorrect. Les bonnes réponses sont : " + correctAnswer.join(", ") + ".";
+        fb.classList.add("incorrect");
+      }
+
+    } else {
+      // Vrai / Faux
+      const selected = document.querySelector(`input[name="q${qNum}"]:checked`)?.value;
+
+      if (!selected) {
+        fb.textContent = "⚠️ Choisis Vrai ou Faux.";
+        validateBtn.disabled = false;
+        return;
+      }
+
+      isCorrect = selected === correctAnswer;
+
+      if (isCorrect) {
+        score++;
+        switch (qNum) {
+          case "3":
+            fb.textContent = "✅ Exact, il faut vérifier si la commande existe déjà dans SAP.";
+            break;
+          case "4":
+            fb.textContent = "✅ Exact, il faut vérifier la conformité des données de facturation.";
+            break;
+          case "5":
+            fb.textContent = "✅ Exact, il est nécessaire de contrôler l’intégration de la commande.";
+            break;
+          case "7":
+            fb.textContent = "✅ Exact, il faut indiquer l’origine de la commande : SOLOCAL SA.";
+            break;
+          case "8":
+            fb.textContent = "✅ Exact, si l’IBAN est absent, il faut le créer dans SAP.";
+            break;
+          default:
+            fb.textContent = "✅ Bonne réponse.";
+        }
+        fb.classList.add("correct");
+      } else {
+        let msg = "❌ Incorrect. La bonne réponse est : " + correctAnswer + ".";
+        if (qNum === "5") {
+          msg += " Il faut toujours contrôler l’intégration de la commande.";
+        }
+        fb.textContent = msg;
+        fb.classList.add("incorrect");
+      }
+    }
+
+    // Mise à jour du score live
+    updateLiveScore();
+
+    // Bloquer les inputs de la question
+    currentQuestion.querySelectorAll("input").forEach(input => input.disabled = true);
+
+    // Dernière question ?
+    if (currentQuestionIndex === totalQuestions - 1) {
+      finished = true;
+      afficherScoreFinal();
+      showAllQuestions();
+      validateBtn.disabled = true;
+      validateBtn.textContent = "✅ Quiz terminé";
+      return;
+    }
+
+    // Passage auto à la suivante après un court délai
+    setTimeout(() => {
+      currentQuestionIndex++;
+      showQuestion(currentQuestionIndex);
+    }, 900);
+  }
+
+  function afficherScoreFinal() {
+    const ratio = score / totalQuestions;
+    let cls = "score-bad";
+    if (ratio >= 0.75) cls = "score-good";
+    else if (ratio >= 0.5) cls = "score-medium";
+
+    resultDiv.innerHTML = `Score final : <span class="${cls}">${score} / ${totalQuestions}</span>`;
+  }
+
+  function resetQuiz() {
+    document.getElementById("quiz-form").reset();
+    score = 0;
+    finished = false;
+    currentQuestionIndex = 0;
+    resultDiv.textContent = "";
+    validateBtn.textContent = "✅ Valider cette question";
+    validateBtn.disabled = false;
+
+    document.querySelectorAll(".feedback").forEach(fb => {
+      fb.textContent = "";
+      fb.classList.remove("correct", "incorrect");
+    });
+
+    document.querySelectorAll("input").forEach(input => {
+      input.disabled = false;
+    });
+
+    showQuestion(currentQuestionIndex);
+  }
+
+  // Initialisation
+  showQuestion(currentQuestionIndex);
+  validateBtn.addEventListener("click", validateCurrentQuestion);
+  resetBtn.addEventListener("click", resetQuiz);
+</script>
+
+</body>
+</html>
